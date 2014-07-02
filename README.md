@@ -30,7 +30,7 @@ Connect Database
 
   . path
 
-  docker run -v $HOME/data:$data nicescale/percona-mysql mysql  
+  docker run -it -v $HOME/data:$data nicescale/percona-mysql mysql  
 
 
 Backup Database
