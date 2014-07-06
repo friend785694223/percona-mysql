@@ -37,7 +37,7 @@ REPL_USER=repl
 
 function create_user_repl() {
   echo "GRANT REPLICATION SLAVE,REPLICATION CLIENT,RELOAD ON *.* TO '$REPL_USER'@'%'IDENTIFIED BY '$REPL_PASSWD';" > /services/$sid/data/create_user_repl.sql
-  $DOCKEREXEC sh -c "mysql -f -u root < /var/lib/mysql/create_user_repl.sql"
+  $DOCKEREXEC /opt/nicedocker/wait.sh "mysql -f -u root < /var/lib/mysql/create_user_repl.sql"
   /bin/rm /services/$sid/data/create_user_repl.sql
 }
 
@@ -67,7 +67,7 @@ function change_to_master() {
   echo "stop slave;" > /services/$sid/data/change_master.sql
   echo "CHANGE MASTER TO MASTER_HOST='$mip', MASTER_PORT=$mport, MASTER_USER='$REPL_USER', MASTER_PASSWORD='$REPL_PASSWD', MASTER_LOG_FILE='$mfile', MASTER_LOG_POS=$mpos;" >> /services/$sid/data/change_master.sql
   echo "start slave;" >> /services/$sid/data/change_master.sql
-  $DOCKEREXEC sh -c "mysql -u root < /var/lib/mysql/change_master.sql"
+  $DOCKEREXEC /opt/nicedocker/wait.sh "mysql -u root < /var/lib/mysql/change_master.sql"
   es=$?
   if [ $es -eq 0 ]; then echo "change master ok."
   else echo "change master failed."
@@ -101,10 +101,13 @@ elif [ "$msid" != "$sid" ]; then
   mip=`$RUBY -e "$mip_ruby"`
   mport=`$RUBY -e "$mport_ruby"`
   echo "I am slave, and get master ip:$mip, master port:$mport, changing to master..."
-  while [ true ]; do
-    ping -w2 $mip > /dev/null 2>&1 && break
-    sleep 2
+  count=0
+  while [ $count -lt 300 ]; do
+    $DOCKEREXEC sh -c "mysql -h$mip -P$mport -u$REPL_USER -p$REPL_PASSWD -e 'show status'" > /dev/null 2>&1 && break
+    sleep 1
+    (( count++ ))
   done
+  [ $count -eq 300 ] && echo "wait master more than 300s, timeout." && exit 1
   change_to_master
 else 
   echo "I am master, my service id:$msid, grant user repl to replication, password is the first 10 of md5sum(master service id)"
