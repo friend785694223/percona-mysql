@@ -25,12 +25,27 @@ Create Database
   docker run -v $HOME/data:$data -e DBNAME=dbtest -e DBUSER=dbtest\_user -e DBPASS=123qwe nicescale/percona-mysql /opt/nicedocker/create\_db.sh
 
 
+If you need to automate your work, you can create database like this:
+
+  docker run -v $HOME/data:$data -e DBNAME=dbtest -e DBUSER=dbtest\_user -e DBPASS=123qwe nicescale/percona-mysql /opt/nicedocker/wait.sh /opt/nicedocker/create\_db.sh
+
+Script wait.sh will execute create\_db.sh until mysqld be ready.
+
+
 Connect Database
 -----
 
   . path
 
   docker run -it -v $HOME/data:$data nicescale/percona-mysql mysql  
+
+
+Execute Sql
+-----
+
+  . path
+
+  docker run -v $HOME/data:$data nicescale/percona-mysql mysql -e "select count(\*) from dbtest.testtable"
 
 
 Backup Database
