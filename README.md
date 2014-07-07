@@ -12,15 +12,16 @@ Build
 Run
 -----
 
-  . path.ini
 
-  docker run -d -v $HOME/data:$data -v $HOME/log:$log nicescale/percona-mysql
-
+```bash
+. path.ini
+docker run -d -v $HOME/data:$data -v $HOME/log:$log nicescale/percona-mysql
+```
 
 Create Database
 -----
 
-  . path
+  . path.ini
 
   docker run -v $HOME/data:$data -e DBNAME=dbtest -e DBUSER=dbtest\_user -e DBPASS=123qwe nicescale/percona-mysql /opt/nicedocker/create\_db.sh
 
