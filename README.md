@@ -21,11 +21,11 @@ Create Database
 -----
 ```bash
 . path.ini
-docker run -v $HOME/data:$data -e DBNAME=dbtest -e DBUSER=dbtest\_user -e DBPASS=123qwe nicescale/percona-mysql /opt/nicedocker/create\_db.sh
+docker run -v $HOME/data:$data -e DBNAME=dbtest -e DBUSER=dbtest_user -e DBPASS=123qwe nicescale/percona-mysql /opt/nicedocker/create_db.sh
 ```
 If you need to automate your work, you can create database like this:
 ```bash
-docker run -v $HOME/data:$data -e DBNAME=dbtest -e DBUSER=dbtest\_user -e DBPASS=123qwe nicescale/percona-mysql /opt/nicedocker/wait.sh /opt/nicedocker/create\_db.sh
+docker run -v $HOME/data:$data -e DBNAME=dbtest -e DBUSER=dbtest_user -e DBPASS=123qwe nicescale/percona-mysql /opt/nicedocker/wait.sh /opt/nicedocker/create_db.sh
 ```
 Script wait.sh will execute create\_db.sh until mysqld be ready.
 
