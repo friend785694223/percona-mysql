@@ -9,4 +9,4 @@ get_sid() {
 }
 
 sid=`get_sid`
-/usr/local/bin/nicedocker exec $sid mysqladmin --no-defaults reload
+/usr/local/bin/nicedocker exec $sid /opt/nicedocker/wait.sh 'mysqladmin --no-defaults reload'
