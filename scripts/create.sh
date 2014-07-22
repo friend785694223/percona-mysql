@@ -87,6 +87,25 @@ else
   puts msid;
 end
 "
+rootpwd_ruby="require 'fp/node';
+passwd=FP::Vars.get_service_var('$sid', 'root_passwd', 'mysql');
+if passwd == 'null'; puts '';
+else
+  puts passwd;
+end
+"
+grant_root() {
+  rootpass=`$RUBY -e "$rootpwd_ruby"`
+  cat <<EOF > /services/$sid/data/rootpasswd.sql
+GRANT ALL PRIVILEGES ON *.* TO 'root'@'%' IDENTIFIED BY PASSWORD '$rootpass' WITH GRANT OPTION;
+FLUSH PRIVILEGES;
+EOF
+  $DOCKEREXEC /opt/nicedocker/wait.sh "mysql -f -u root < /var/lib/mysql/rootpasswd.sql"
+  /bin/rm /services/$sid/data/rootpasswd.sql
+}
+echo "Setting password for root, and grant all privileges to all ip(%)."
+grant_root
+
 msid=`$RUBY -e "$msid_ruby"`
 if [ -n "$msid" ]; then
   REPL_PASSWD=`echo $msid|md5sum|cut -c 1-10`
