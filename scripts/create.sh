@@ -97,7 +97,7 @@ end
 grant_root() {
   rootpass=`$RUBY -e "$rootpwd_ruby"`
   cat <<EOF > /services/$sid/data/rootpasswd.sql
-GRANT ALL PRIVILEGES ON *.* TO 'root'@'%' IDENTIFIED BY PASSWORD '$rootpass' WITH GRANT OPTION;
+GRANT ALL PRIVILEGES ON *.* TO 'root'@'%' IDENTIFIED BY '$rootpass' WITH GRANT OPTION;
 FLUSH PRIVILEGES;
 EOF
   $DOCKEREXEC /opt/nicedocker/wait.sh "mysql -f -u root < /var/lib/mysql/rootpasswd.sql"
