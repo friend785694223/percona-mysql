@@ -9,8 +9,8 @@ get_sid() {
 }
 
 sid=`get_sid`
-if docker ps|grep -q $sid; then
+if docker top $sid > /dev/null 2>&1; then
   /usr/local/bin/nicedocker exec $sid /opt/nicedocker/wait.sh 'mysqladmin --no-defaults shutdown'
 else
-  echo "Service $sid not running."
+  echo "service $sid not running."
 fi
