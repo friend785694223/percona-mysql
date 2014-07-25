@@ -24,6 +24,10 @@ nicescale_env() {
   test -f /etc/.fp/csp.conf
 }
 
+die() {
+  echo $*
+  exit 1
+}
 nicescale_env || exit 0
 
 get_sid
@@ -37,7 +41,8 @@ REPL_USER=repl
 
 function create_user_repl() {
   echo "GRANT REPLICATION SLAVE,REPLICATION CLIENT,RELOAD ON *.* TO '$REPL_USER'@'%'IDENTIFIED BY '$REPL_PASSWD';" > /services/$sid/data/create_user_repl.sql
-  $DOCKEREXEC /opt/nicedocker/wait.sh "mysql -f -u root < /var/lib/mysql/create_user_repl.sql"
+  $DOCKEREXEC /opt/nicedocker/wait.sh "mysql -f -u root < /var/lib/mysql/create_user_repl.sql" ||
+  die "grant for repl failed."
   /bin/rm /services/$sid/data/create_user_repl.sql
 }
 
@@ -54,7 +59,8 @@ function mysql_install_db() {
 
 function change_to_master() {
   echo "lock master $mip..."
-  $DOCKEREXEC sh -c "mysql -h$mip -P$mport -u$REPL_USER -p$REPL_PASSWD -e 'flush tables with read lock'"
+  $DOCKEREXEC sh -c "mysql -h$mip -P$mport -u$REPL_USER -p$REPL_PASSWD -e 'flush tables with read lock'" ||
+  die "failed to lock master $mip."
   echo "get master status ..."
   m_tmp=`$DOCKEREXEC sh -c "mysql -h$mip -P$mport -u$REPL_USER -p$REPL_PASSWD -e 'show master status\G'"|head -3|tail -2|awk '{print $2}'`
   mfile=`echo $m_tmp | awk '{print $1}'`
@@ -67,14 +73,16 @@ function change_to_master() {
   echo "stop slave;" > /services/$sid/data/change_master.sql
   echo "CHANGE MASTER TO MASTER_HOST='$mip', MASTER_PORT=$mport, MASTER_USER='$REPL_USER', MASTER_PASSWORD='$REPL_PASSWD', MASTER_LOG_FILE='$mfile', MASTER_LOG_POS=$mpos;" >> /services/$sid/data/change_master.sql
   echo "start slave;" >> /services/$sid/data/change_master.sql
-  $DOCKEREXEC /opt/nicedocker/wait.sh "mysql -u root < /var/lib/mysql/change_master.sql"
+  $DOCKEREXEC /opt/nicedocker/wait.sh "mysql -u root < /var/lib/mysql/change_master.sql" ||
+  die "failed to change to master $mip."
   es=$?
   if [ $es -eq 0 ]; then echo "change master ok."
   else echo "change master failed."
   fi
   /bin/rm /services/$sid/data/change_master.sql
   echo "unlock master $mip..."
-  $DOCKEREXEC sh -c "mysql -h$mip -P$mport -u$REPL_USER -p$REPL_PASSWD -e 'unlock tables'"
+  $DOCKEREXEC sh -c "mysql -h$mip -P$mport -u$REPL_USER -p$REPL_PASSWD -e 'unlock tables'" ||
+  die "failed to unlock master $mip."
   return $es
 }
 
@@ -101,7 +109,8 @@ grant_root() {
 GRANT ALL PRIVILEGES ON *.* TO 'root'@'%' IDENTIFIED BY '$rootpass' WITH GRANT OPTION;
 FLUSH PRIVILEGES;
 EOF
-  $DOCKEREXEC /opt/nicedocker/wait.sh "mysql -f -u root < /var/lib/mysql/rootpasswd.sql"
+  $DOCKEREXEC /opt/nicedocker/wait.sh "mysql -f -u root < /var/lib/mysql/rootpasswd.sql" ||
+  die "grant for root failed."
   /bin/rm /services/$sid/data/rootpasswd.sql
 }
 grant_root
