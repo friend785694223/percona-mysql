@@ -107,6 +107,8 @@ grant_root() {
   echo "Setting password:$rootpass for root, and grant all privileges to all ip(%). Please protect your password carefully!"
   cat <<EOF > /services/$sid/data/rootpasswd.sql
 GRANT ALL PRIVILEGES ON *.* TO 'root'@'%' IDENTIFIED BY '$rootpass' WITH GRANT OPTION;
+GRANT ALL PRIVILEGES ON *.* TO 'root'@'127.0.0.1' IDENTIFIED BY '$rootpass' WITH GRANT OPTION;
+GRANT ALL PRIVILEGES ON *.* TO 'root'@'localhost' IDENTIFIED BY '$rootpass' WITH GRANT OPTION;
 FLUSH PRIVILEGES;
 EOF
   $DOCKEREXEC /opt/nicedocker/wait.sh "mysql -f -u root < /var/lib/mysql/rootpasswd.sql" ||
